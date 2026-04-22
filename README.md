@@ -1,67 +1,40 @@
 # CCVV - AI Resume Analyzer
 
-AI 赋能的智能简历分析系统。当前仓库处于 Stage 7：缓存与错误处理增强。
+AI 赋能的智能简历分析系统。项目实现了从 PDF 简历上传、文本解析、结构化信息提取，到 JD 分析与匹配评分的完整主链路。
 
-## 当前阶段
+## 功能说明
 
-Stage 1 已完成基础工程结构：
+- 上传单个 PDF 简历
+- 使用 PyMuPDF 提取多页 PDF 文本
+- 对简历文本做基础清洗
+- 使用 LLM 提取简历结构化信息，失败时规则 fallback
+- 提取字段包括姓名、电话、邮箱、地址、求职意向、期望薪资、工作年限、学历背景、工作经历、项目经历
+- 输入岗位 JD 并提取关键词、学历要求、经验要求和核心要求
+- 优先使用 LLM 计算 JD 与简历匹配分，失败时 fallback 到可解释规则评分
+- 对 PDF 解析和简历 + JD 匹配结果做简单 hash 缓存
+- 统一错误响应格式
+- React + TailwindCSS 前端展示完整分析结果
+- GitHub Actions 自动安装依赖、运行后端测试、构建前端
 
-- FastAPI 后端项目骨架
-- React + Vite 前端项目骨架
-- `/api/health` 健康检查接口
-- 基础依赖文件
-- 后续测试、CI/CD、部署扩展的目录预留
+## 技术栈
 
-Stage 2 已完成前端最小壳子：
+后端：
 
-- PDF 文件选择控件
-- JD 文本输入区域
-- 提交分析按钮
-- 分析结果占位区
-- 前端调用后端 `/api/health` 并展示联调状态
+- Python 3.12
+- FastAPI
 
-Stage 3 已完成 PDF 上传与文本提取：
+前端：
 
-- 单个 PDF 上传接口
-- PDF 文件类型和空文件校验
-- 使用 PyMuPDF 提取多页文本
-- 基础文本清洗
-- 返回原始文本、清洗后文本预览和基础元数据
-- 前端最小接入上传解析接口
+- React
+- JavaScript
+- TailwindCSS
 
-Stage 4 已完成简历关键信息提取：
+工程化：
 
-- 设计结构化简历输出 schema
-- 新增 AI 提取服务
-- 支持姓名、电话、邮箱、地址等核心字段
-- 补充求职意向、期望薪资、工作年限、学历背景、工作经历、项目经历
-- 未配置 AI key 或模型响应异常时提供规则 fallback
-- 前端展示结构化结果
-
-Stage 5 已完成 JD 提取与匹配评分：
-
-- 接收 JD 文本并提取关键词和核心要求
-- 优先使用 LLM 计算简历与 JD 匹配分
-- 未配置 AI key 或 LLM 评分失败时 fallback 到规则匹配分
-- 规则评分基于技能、学历、工作经验、项目经历
-- 返回 JD 关键词、匹配分数、分项得分和匹配说明
-- 前端接入 PDF + JD 完整主链路
-
-Stage 6 已完成前端结果展示增强：
-
-- 前端结果区按匹配概览、JD 关键词、匹配说明、简历基本信息、学历背景、工作经历、项目经历组织
-- 增强 loading、error、empty 状态
-- 优化 PDF 上传与 JD 输入交互
-- 抽象前端展示组件，降低 `App.jsx` 复杂度
-- 前端样式全部使用 TailwindCSS utility class
-
-Stage 7 已完成缓存与错误处理增强：
-
-- 对上传 PDF 内容计算 `resume_hash`
-- 对已解析 PDF 文本做内存缓存，避免重复解析
-- 对 `resume_hash + jd_hash` 做匹配结果缓存，避免重复评分
-- 后端统一错误响应格式
-- 前端兼容统一错误格式，并展示缓存命中状态
+- GitHub Actions
+- 简单内存缓存
+- 统一错误处理
+- 分层目录结构
 
 ## 项目结构
 
@@ -76,132 +49,284 @@ Stage 7 已完成缓存与错误处理增强：
 │   │   │   │   └── resumes.py
 │   │   │   └── router.py
 │   │   ├── core/
-│   │   │   ├── error_handlers.py
-│   │   │   └── config.py
+│   │   │   ├── config.py
+│   │   │   └── error_handlers.py
 │   │   ├── schemas/
+│   │   │   ├── error.py
 │   │   │   ├── match.py
 │   │   │   └── resume.py
 │   │   ├── services/
+│   │   │   ├── ai_client.py
+│   │   │   ├── ai_match_scorer.py
+│   │   │   ├── ai_resume_extractor.py
 │   │   │   ├── hash_utils.py
-│   │   │   ├── jd_extractor.py
-│   │   │   ├── matching.py
-│   │   │   ├── pdf_parser.py
-│   │   │   ├── resume_extractor.py
+│   │   │   ├── pdf_text_extractor.py
 │   │   │   ├── resume_cache.py
-│   │   │   └── text_cleaner.py
+│   │   │   ├── resume_extraction_service.py
+│   │   │   ├── resume_match_service.py
+│   │   │   ├── resume_text_cleaner.py
+│   │   │   ├── rule_jd_extractor.py
+│   │   │   ├── rule_match_scorer.py
+│   │   │   └── rule_resume_extractor.py
 │   │   └── main.py
 │   ├── tests/
-│   │   └── .gitkeep
+│   │   ├── test_health_api.py
+│   │   ├── test_rule_match_scorer.py
+│   │   └── test_text_cleaner.py
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
 │   │   ├── api/
-│   │   │   ├── health.js
-│   │   │   └── resume.js
 │   │   ├── components/
-│   │   │   ├── AnalyzeForm.jsx
-│   │   │   ├── ExplanationList.jsx
-│   │   │   ├── FieldGrid.jsx
-│   │   │   ├── HealthBadge.jsx
-│   │   │   ├── JsonListSection.jsx
-│   │   │   ├── KeywordList.jsx
-│   │   │   ├── MatchSummary.jsx
-│   │   │   ├── MetricGrid.jsx
-│   │   │   ├── PageHeader.jsx
-│   │   │   ├── ResultDashboard.jsx
-│   │   │   └── StatusNotice.jsx
+│   │   │   ├── feedback/
+│   │   │   ├── forms/
+│   │   │   ├── layout/
+│   │   │   ├── results/
+│   │   │   └── workspace/
+│   │   ├── pages/
 │   │   ├── utils/
-│   │   │   └── display.js
 │   │   ├── App.jsx
 │   │   ├── index.css
 │   │   └── main.jsx
-│   ├── index.html
 │   ├── package.json
+│   ├── pnpm-lock.yaml
 │   └── vite.config.js
+├── .github/workflows/ci.yml
+├── .env.example
 └── README.md
 ```
 
-## 后端接口
+## 本地运行
 
-健康检查：
+### 1. 后端
+
+Windows PowerShell:
+
+```powershell
+cd backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+macOS / Linux:
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+如果 Windows 上 `python.exe` 指向 Microsoft Store 占位入口并报“系统无法访问此文件”，建议关闭系统设置里的 Python App Execution Alias，或安装官方 Python 后重新创建 venv。
+
+### 2. 前端
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+默认访问：
 
 ```text
+http://localhost:5173
+```
+
+前端默认请求：
+
+```text
+http://localhost:8000
+```
+
+如需修改：
+
+```text
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+## AI 配置
+
+复制 `.env.example` 为 `.env`，填写：
+
+```text
+AI_API_KEY=your_api_key_here
+AI_BASE_URL=https://api.openai.com/v1
+AI_MODEL=gpt-4o-mini
+```
+
+也支持使用 `OPENAI_API_KEY`。未配置 key 时，简历提取和匹配评分会使用规则 fallback，系统仍可演示主流程。
+
+## API 说明
+
+### 健康检查
+
+```http
 GET /api/health
 ```
 
-PDF 解析：
+响应：
 
-```text
+```json
+{
+  "status": "ok",
+  "service": "CCVV - AI Resume Analyzer API"
+}
+```
+
+### PDF 文本解析
+
+```http
 POST /api/resumes/parse
 Content-Type: multipart/form-data
-file: PDF 文件
+file: resume.pdf
 ```
 
-响应包含：
+响应示例：
 
-- `filename`
-- `resume_hash`
-- `page_count`
-- `raw_text`
-- `cleaned_text_preview`
-- `raw_text_length`
-- `cleaned_text_length`
-- `cache_hit`
+```json
+{
+  "filename": "resume.pdf",
+  "resume_hash": "sha256...",
+  "page_count": 2,
+  "raw_text": "...",
+  "cleaned_text_preview": "...",
+  "raw_text_length": 4500,
+  "cleaned_text_length": 3900,
+  "cache_hit": false
+}
+```
 
-简历信息提取：
+### 简历结构化提取
 
-```text
+```http
 POST /api/resumes/extract
 Content-Type: multipart/form-data
-file: PDF 文件
+file: resume.pdf
 ```
 
-响应包含：
+响应中的 `data`：
 
-- `filename`
-- `page_count`
-- `data`
-- `cleaned_text_preview`
-- `extraction_method`
-- `warnings`
+```json
+{
+  "name": "张三",
+  "phone": "13800000000",
+  "email": "zhangsan@example.com",
+  "address": "上海",
+  "job_intention": "Python 后端工程师",
+  "expected_salary": "面议",
+  "years_of_experience": "3年",
+  "education": [],
+  "work_experience": [],
+  "projects": []
+}
+```
 
-JD 分析：
+### JD 分析
 
-```text
+```http
 POST /api/jobs/analyze
 Content-Type: application/json
 
 {
-  "jd_text": "岗位描述文本"
+  "jd_text": "负责 Python 后端开发，熟悉 FastAPI、SQL、Docker，本科及以上，3年以上经验。"
 }
 ```
 
-简历与 JD 匹配：
+响应：
 
-```text
+```json
+{
+  "jd": {
+    "keywords": ["Python", "FastAPI", "SQL", "Docker", "本科", "3年经验"],
+    "required_skills": ["Python", "FastAPI", "SQL", "Docker"],
+    "required_education": "本科",
+    "required_experience_years": 3,
+    "core_requirements": []
+  }
+}
+```
+
+### 简历与 JD 匹配
+
+```http
 POST /api/resumes/match
 Content-Type: multipart/form-data
-file: PDF 文件
+file: resume.pdf
 jd_text: 岗位描述文本
 ```
 
-响应包含：
+响应示例：
 
-- `resume`
-- `resume_hash`
-- `jd_hash`
-- `jd`
-- `match`
-- `cleaned_text_preview`
-- `extraction_method`
-- `warnings`
-- `parse_cache_hit`
-- `match_cache_hit`
+```json
+{
+  "filename": "resume.pdf",
+  "resume_hash": "sha256...",
+  "jd_hash": "sha256...",
+  "page_count": 2,
+  "resume": {},
+  "jd": {},
+  "match": {
+    "score": 86,
+    "summary": "匹配度高，简历与岗位要求高度一致。",
+    "scoring_method": "ai",
+    "explanations": ["技能匹配较好。"],
+    "matched_keywords": ["Python", "FastAPI"],
+    "missing_keywords": ["Docker"],
+    "breakdown": {
+      "skill_score": 38,
+      "education_score": 15,
+      "experience_score": 20,
+      "project_score": 13
+    }
+  },
+  "cleaned_text_preview": "...",
+  "extraction_method": "ai",
+  "warnings": [],
+  "parse_cache_hit": false,
+  "match_cache_hit": false
+}
+```
 
-`match.scoring_method` 表示当前评分来源：
+`match.scoring_method`：
 
 - `ai`：LLM 评分
 - `rule`：规则 fallback 评分
+
+## 缓存机制
+
+缓存采用进程内存实现：
+
+- `resume_hash = sha256(PDF 文件 bytes)`
+- `jd_hash = sha256(规范化后的 JD 文本)`
+- PDF 解析缓存键：`resume_hash`
+- 匹配缓存键：`resume_hash + ":" + jd_hash`
+
+缓存命中字段：
+
+- `cache_hit`
+- `parse_cache_hit`
+- `match_cache_hit`
+
+该方案简单、可解释；生产环境可替换为 Redis 或对象存储索引。
+
+## 匹配评分逻辑
+
+规则评分总分 100：
+
+- 技能匹配：45 分
+- 学历相关性：15 分
+- 工作经验相关性：25 分
+- 项目经历相关性：15 分
+
+系统优先调用 LLM 进行综合评分。如果 AI key 缺失、请求失败或模型响应异常，则使用规则评分兜底，并在 `warnings` 中返回原因。
+
+## 错误响应格式
 
 统一错误响应：
 
@@ -213,58 +338,70 @@ jd_text: 岗位描述文本
 }
 ```
 
-AI 配置：
+常见错误：
 
-```text
-AI_API_KEY=your_api_key
-AI_BASE_URL=https://api.openai.com/v1
-AI_MODEL=gpt-4o-mini
-```
+- 非 PDF：`415 UNSUPPORTED_MEDIA_TYPE`
+- 空文件：`400 BAD_REQUEST`
+- PDF 无法解析：`422 UNPROCESSABLE_ENTITY`
+- 参数校验失败：`422 VALIDATION_ERROR`
 
-也兼容使用 `OPENAI_API_KEY` 作为 API key 环境变量。
+## 测试
 
-## 本地启动
-
-### 后端
+后端测试：
 
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+pytest
 ```
 
-Windows PowerShell:
+当前覆盖：
 
-```powershell
-cd backend
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
+- 文本清洗
+- 规则匹配评分
+- 健康检查 API
 
-### 前端
+前端构建：
 
 ```bash
 cd frontend
-npm install
-npm run dev
+pnpm build
 ```
 
-默认访问：
+## CI
+
+GitHub Actions 配置位于：
 
 ```text
-http://localhost:5173
+.github/workflows/ci.yml
 ```
 
-如需修改前端访问的后端地址，可设置：
+CI 会执行：
 
-```text
-VITE_API_BASE_URL=http://localhost:8000
+- 安装 Python 依赖
+- 运行 `pytest`
+- 安装前端依赖
+- 运行 `pnpm build`
+
+## 部署说明
+
+前端构建产物：
+
+```bash
+cd frontend
+pnpm build
 ```
 
-## 后续阶段建议
+后端部署时需要配置：
 
-下一阶段适合做工程化收尾：补基础测试、README 演示说明、环境变量示例和部署准备。
+- Python 运行环境
+- `requirements.txt`
+- AI 环境变量
+- CORS 允许的前端域名
+
+## 已知限制
+
+- 内存缓存只在单进程内有效，服务重启会丢失。
+- 未实现登录、权限和审计。
+- PDF 扫描件 OCR 暂不支持。
+- LLM 输出质量依赖模型能力和 prompt。
+- 规则 fallback 偏保守，复杂简历可能提取不完整。
