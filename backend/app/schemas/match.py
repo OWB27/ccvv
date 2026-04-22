@@ -38,6 +38,8 @@ class JobDescriptionAnalyzeResponse(BaseModel):
 
 class ResumeMatchResponse(BaseModel):
     filename: str
+    resume_hash: str
+    jd_hash: str
     page_count: int
     resume: ResumeStructuredData
     jd: JobDescriptionAnalysis
@@ -45,3 +47,5 @@ class ResumeMatchResponse(BaseModel):
     cleaned_text_preview: str
     extraction_method: str
     warnings: list[str] = Field(default_factory=list)
+    parse_cache_hit: bool = False
+    match_cache_hit: bool = False

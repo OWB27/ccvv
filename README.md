@@ -1,6 +1,6 @@
 # CCVV - AI Resume Analyzer
 
-AI 赋能的智能简历分析系统。当前仓库处于 Stage 6：前端结果展示增强。
+AI 赋能的智能简历分析系统。当前仓库处于 Stage 7：缓存与错误处理增强。
 
 ## 当前阶段
 
@@ -55,6 +55,14 @@ Stage 6 已完成前端结果展示增强：
 - 抽象前端展示组件，降低 `App.jsx` 复杂度
 - 前端样式全部使用 TailwindCSS utility class
 
+Stage 7 已完成缓存与错误处理增强：
+
+- 对上传 PDF 内容计算 `resume_hash`
+- 对已解析 PDF 文本做内存缓存，避免重复解析
+- 对 `resume_hash + jd_hash` 做匹配结果缓存，避免重复评分
+- 后端统一错误响应格式
+- 前端兼容统一错误格式，并展示缓存命中状态
+
 ## 项目结构
 
 ```text
@@ -68,15 +76,18 @@ Stage 6 已完成前端结果展示增强：
 │   │   │   │   └── resumes.py
 │   │   │   └── router.py
 │   │   ├── core/
+│   │   │   ├── error_handlers.py
 │   │   │   └── config.py
 │   │   ├── schemas/
 │   │   │   ├── match.py
 │   │   │   └── resume.py
 │   │   ├── services/
+│   │   │   ├── hash_utils.py
 │   │   │   ├── jd_extractor.py
 │   │   │   ├── matching.py
 │   │   │   ├── pdf_parser.py
 │   │   │   ├── resume_extractor.py
+│   │   │   ├── resume_cache.py
 │   │   │   └── text_cleaner.py
 │   │   └── main.py
 │   ├── tests/
@@ -129,11 +140,13 @@ file: PDF 文件
 响应包含：
 
 - `filename`
+- `resume_hash`
 - `page_count`
 - `raw_text`
 - `cleaned_text_preview`
 - `raw_text_length`
 - `cleaned_text_length`
+- `cache_hit`
 
 简历信息提取：
 
@@ -175,16 +188,30 @@ jd_text: 岗位描述文本
 响应包含：
 
 - `resume`
+- `resume_hash`
+- `jd_hash`
 - `jd`
 - `match`
 - `cleaned_text_preview`
 - `extraction_method`
 - `warnings`
+- `parse_cache_hit`
+- `match_cache_hit`
 
 `match.scoring_method` 表示当前评分来源：
 
 - `ai`：LLM 评分
 - `rule`：规则 fallback 评分
+
+统一错误响应：
+
+```json
+{
+  "code": "BAD_REQUEST",
+  "message": "错误说明",
+  "details": null
+}
+```
 
 AI 配置：
 

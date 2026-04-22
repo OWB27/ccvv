@@ -63,7 +63,16 @@ function ResultDashboard({ state }) {
             { label: '文件名', value: data.filename },
             { label: '页数', value: data.page_count },
             { label: '简历提取', value: data.extraction_method === 'ai' ? 'LLM' : 'Fallback' },
+            { label: '解析缓存', value: data.parse_cache_hit ? '命中' : '未命中' },
+            { label: '匹配缓存', value: data.match_cache_hit ? '命中' : '未命中' },
             { label: '警告', value: data.warnings?.length || 0 },
+          ]}
+        />
+
+        <MetricGrid
+          items={[
+            { label: '简历 Hash', value: data.resume_hash ? `${data.resume_hash.slice(0, 12)}...` : '无' },
+            { label: 'JD Hash', value: data.jd_hash ? `${data.jd_hash.slice(0, 12)}...` : '无' },
           ]}
         />
 

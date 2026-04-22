@@ -21,7 +21,7 @@ export async function matchResumeWithJd(file, jdText) {
   const data = await response.json().catch(() => null)
 
   if (!response.ok) {
-    throw new Error(data?.detail || `Resume match failed with status ${response.status}`)
+    throw new Error(data?.message || data?.detail || `Resume match failed with status ${response.status}`)
   }
 
   return data
@@ -39,7 +39,7 @@ async function uploadResumeFile(path, file) {
   const data = await response.json().catch(() => null)
 
   if (!response.ok) {
-    throw new Error(data?.detail || `PDF parse failed with status ${response.status}`)
+    throw new Error(data?.message || data?.detail || `PDF parse failed with status ${response.status}`)
   }
 
   return data

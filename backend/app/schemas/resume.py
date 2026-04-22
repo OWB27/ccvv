@@ -3,11 +3,13 @@ from pydantic import BaseModel, Field
 
 class ResumeParseResponse(BaseModel):
     filename: str
+    resume_hash: str
     page_count: int
     raw_text: str
     cleaned_text_preview: str
     raw_text_length: int
     cleaned_text_length: int
+    cache_hit: bool = False
 
 
 class EducationItem(BaseModel):
@@ -49,8 +51,10 @@ class ResumeStructuredData(BaseModel):
 
 class ResumeExtractResponse(BaseModel):
     filename: str
+    resume_hash: str
     page_count: int
     data: ResumeStructuredData
     cleaned_text_preview: str
     extraction_method: str
     warnings: list[str] = Field(default_factory=list)
+    cache_hit: bool = False
