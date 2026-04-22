@@ -2,16 +2,21 @@ import { useEffect, useState } from 'react'
 import './App.css'
 
 import { fetchHealthStatus } from './api/health'
+import { parseResumePdf } from './api/resume'
 
 function App() {
-  const [resumeFileName, setResumeFileName] = useState('')
+  const [resumeFile, setResumeFile] = useState(null)
   const [jobDescription, setJobDescription] = useState('')
   const [healthState, setHealthState] = useState({
     loading: true,
     error: '',
     data: null,
   })
-  const [resultMessage, setResultMessage] = useState('等待接入真实分析接口。')
+  const [parseState, setParseState] = useState({
+    loading: false,
+    error: '',
+    data: null,
+  })
 
   useEffect(() => {
     let ignore = false
@@ -41,13 +46,31 @@ function App() {
   }, [])
 
   function handleFileChange(event) {
-    const file = event.target.files?.[0]
-    setResumeFileName(file ? file.name : '')
+    const file = event.target.files?.[0] || null
+    setResumeFile(file)
+    setParseState({ loading: false, error: '', data: null })
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    setResultMessage('Stage 2 仅完成页面壳子，真实分析将在后续阶段接入。')
+
+    if (!resumeFile) {
+      setParseState({ loading: false, error: '请先选择一个 PDF 简历文件。', data: null })
+      return
+    }
+
+    setParseState({ loading: true, error: '', data: null })
+
+    try {
+      const data = await parseResumePdf(resumeFile)
+      setParseState({ loading: false, error: '', data })
+    } catch (error) {
+      setParseState({
+        loading: false,
+        error: error.message || 'PDF 解析失败',
+        data: null,
+      })
+    }
   }
 
   const healthText = healthState.loading
@@ -60,9 +83,9 @@ function App() {
     <main className="app-shell">
       <header className="page-header">
         <div>
-          <p className="eyebrow">AI Resume Analyzer</p>
+          <p className="eyebrow">CCVV - AI Resume Analyzer</p>
           <h1>智能简历分析系统</h1>
-          <p className="subtitle">上传简历、填写岗位 JD，后续将返回结构化分析结果。</p>
+          <p className="subtitle">上传 PDF 简历并填写岗位 JD，后续将接入 AI 提取和匹配评分。</p>
         </div>
         <div className={`health-badge ${healthState.error ? 'error' : 'ok'}`}>
           <span>{healthText}</span>
@@ -79,7 +102,7 @@ function App() {
             <input type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
           </label>
           <p className="helper-text">
-            {resumeFileName || '当前阶段只选择文件，不执行上传。'}
+            {resumeFile ? `已选择：${resumeFile.name}` : '请选择一个 PDF 文件，当前阶段会提取文本。'}
           </p>
         </section>
 
@@ -88,21 +111,47 @@ function App() {
           <textarea
             value={jobDescription}
             onChange={(event) => setJobDescription(event.target.value)}
-            placeholder="粘贴岗位描述，后续阶段将用于匹配评分。"
+            placeholder="粘贴岗位描述。当前阶段暂不做 JD 匹配。"
             rows="9"
           />
         </section>
 
         <section className="actions">
-          <button type="submit">提交分析</button>
+          <button type="submit" disabled={parseState.loading}>
+            {parseState.loading ? '解析中...' : '提交分析'}
+          </button>
         </section>
 
         <section className="panel result-panel">
-          <h2>分析结果</h2>
-          <pre>{resultMessage}</pre>
-          <p className="helper-text">
-            后续会在这里展示简历信息提取、JD 匹配评分和结构化 JSON。
-          </p>
+          <h2>解析结果</h2>
+          {parseState.error && <p className="error-text">{parseState.error}</p>}
+          {!parseState.error && !parseState.data && (
+            <pre>等待上传 PDF 后展示文本预览。</pre>
+          )}
+          {parseState.data && (
+            <div className="result-content">
+              <dl className="result-meta">
+                <div>
+                  <dt>文件名</dt>
+                  <dd>{parseState.data.filename}</dd>
+                </div>
+                <div>
+                  <dt>页数</dt>
+                  <dd>{parseState.data.page_count}</dd>
+                </div>
+                <div>
+                  <dt>原始文本长度</dt>
+                  <dd>{parseState.data.raw_text_length}</dd>
+                </div>
+                <div>
+                  <dt>清洗后文本长度</dt>
+                  <dd>{parseState.data.cleaned_text_length}</dd>
+                </div>
+              </dl>
+              <h3>清洗后文本预览</h3>
+              <pre>{parseState.data.cleaned_text_preview || '未提取到可展示文本。'}</pre>
+            </div>
+          )}
         </section>
       </form>
     </main>

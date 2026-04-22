@@ -122,8 +122,57 @@ button:hover {
   background: #1f527f;
 }
 
+button:disabled {
+  background: #91a4b7;
+  cursor: not-allowed;
+}
+
 .result-panel {
   grid-column: 1 / -1;
+}
+
+.error-text {
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: #fff0ed;
+  color: #8a2d1b;
+  padding: 12px;
+}
+
+.result-content {
+  display: grid;
+  gap: 16px;
+}
+
+.result-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.result-meta div {
+  border-radius: 8px;
+  background: #f4f7fb;
+  padding: 12px;
+}
+
+.result-meta dt {
+  color: #697586;
+  font-size: 13px;
+}
+
+.result-meta dd {
+  margin: 4px 0 0;
+  color: #172026;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.result-panel h3 {
+  margin: 0;
+  color: #121923;
+  font-size: 16px;
 }
 
 pre {
@@ -154,5 +203,9 @@ pre {
 
   button {
     width: 100%;
+  }
+
+  .result-meta {
+    grid-template-columns: 1fr;
   }
 }
