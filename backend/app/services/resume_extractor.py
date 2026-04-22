@@ -36,6 +36,16 @@ RESUME_SCHEMA_INSTRUCTION = {
             "period": "string or null",
         }
     ],
+    "work_experience": [
+        {
+            "company": "string or null",
+            "position": "string or null",
+            "period": "string or null",
+            "description": "string or null, one-sentence work summary",
+            "highlights": ["string"],
+            "technologies": ["string"],
+        }
+    ],
     "projects": [
         {
             "name": "string or null",
@@ -123,7 +133,9 @@ def _build_prompt(cleaned_text: str) -> str:
     return (
         "Extract resume information as strict JSON only. Use only the resume text; do not invent facts. "
         "Use JSON null or [] when unknown. For projects, put the short summary in description, "
-        "and put bullet points/responsibilities/achievements/metrics in highlights.\n\n"
+        "and put bullet points/responsibilities/achievements/metrics in highlights. "
+        "For work_experience, extract company, position, period, summary, responsibilities, achievements, "
+        "metrics, and technologies that can help later JD matching.\n\n"
         "Schema:\n"
         f"{json.dumps(RESUME_SCHEMA_INSTRUCTION, ensure_ascii=False)}\n\n"
         "Resume text:\n"
@@ -137,6 +149,7 @@ def _validate_structured_data(data: dict[str, Any]) -> ResumeStructuredData:
 
     data = _normalize_null_strings(data)
     data.setdefault("education", [])
+    data.setdefault("work_experience", [])
     data.setdefault("projects", [])
     return ResumeStructuredData(**data)
 
@@ -165,6 +178,7 @@ def _extract_with_rules(text: str) -> ResumeStructuredData:
         expected_salary=_find_labeled_value(lines, ["期望薪资", "薪资要求", "期望月薪"]),
         years_of_experience=_guess_experience(text),
         education=_guess_education(lines),
+        work_experience=_guess_work_experience(lines),
         projects=_guess_projects(lines),
     )
 
@@ -206,6 +220,60 @@ def _guess_education(lines: list[str]) -> list[dict[str, str | None]]:
         if len(items) >= 3:
             break
     return items
+
+
+def _guess_work_experience(lines: list[str]) -> list[dict[str, Any]]:
+    section_keywords = ("工作经历", "工作经验", "实习经历", "任职经历", "Work Experience", "Experience")
+    company_keywords = ("有限公司", "集团", "科技", "公司", "Co.", "Ltd", "Inc", "LLC")
+    items = []
+
+    for index, line in enumerate(lines):
+        if any(keyword.lower() in line.lower() for keyword in section_keywords + company_keywords):
+            context = lines[index : index + 5]
+            description = " ".join(context)
+            items.append(
+                {
+                    "company": _guess_company_from_line(line),
+                    "position": _guess_position(context),
+                    "period": _find_first(
+                        r"(?:20\d{2}|19\d{2})[./年-]?\d{0,2}\s*(?:-|至|到|~)\s*(?:20\d{2}|19\d{2}|至今|现在|Present)",
+                        description,
+                    ),
+                    "description": description[:300],
+                    "highlights": _guess_highlights(context),
+                    "technologies": [],
+                }
+            )
+        if len(items) >= 3:
+            break
+
+    return items
+
+
+def _guess_company_from_line(line: str) -> str | None:
+    if any(keyword in line for keyword in ("有限公司", "集团", "科技", "公司")):
+        return line[:80]
+    if any(keyword.lower() in line.lower() for keyword in ("Co.", "Ltd", "Inc", "LLC")):
+        return line[:80]
+    return None
+
+
+def _guess_position(lines: list[str]) -> str | None:
+    position_keywords = ("工程师", "开发", "后端", "前端", "产品", "运营", "经理", "实习", "Engineer", "Developer")
+    for line in lines:
+        if any(keyword.lower() in line.lower() for keyword in position_keywords):
+            return line[:80]
+    return None
+
+
+def _guess_highlights(lines: list[str]) -> list[str]:
+    highlights = []
+    for line in lines[1:]:
+        if len(line) >= 8:
+            highlights.append(line[:180])
+        if len(highlights) >= 3:
+            break
+    return highlights
 
 
 def _guess_projects(lines: list[str]) -> list[dict[str, Any]]:

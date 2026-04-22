@@ -170,6 +170,11 @@ function App() {
               </div>
 
               <ListSection title="学历背景" items={extracted.education} emptyText="暂无学历信息" />
+              <ListSection
+                title="工作经历"
+                items={extracted.work_experience}
+                emptyText="暂无工作经历"
+              />
               <ListSection title="项目经历" items={extracted.projects} emptyText="暂无项目经历" />
 
               <h3>清洗后文本预览</h3>

@@ -25,6 +25,15 @@ class ProjectItem(BaseModel):
     technologies: list[str] = Field(default_factory=list)
 
 
+class WorkExperienceItem(BaseModel):
+    company: str | None = None
+    position: str | None = None
+    period: str | None = None
+    description: str | None = None
+    highlights: list[str] = Field(default_factory=list)
+    technologies: list[str] = Field(default_factory=list)
+
+
 class ResumeStructuredData(BaseModel):
     name: str | None = None
     phone: str | None = None
@@ -34,6 +43,7 @@ class ResumeStructuredData(BaseModel):
     expected_salary: str | None = None
     years_of_experience: str | None = None
     education: list[EducationItem] = Field(default_factory=list)
+    work_experience: list[WorkExperienceItem] = Field(default_factory=list)
     projects: list[ProjectItem] = Field(default_factory=list)
 
 
