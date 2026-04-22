@@ -2,17 +2,11 @@ import re
 
 from app.schemas.match import JobDescriptionAnalysis, MatchResult, ScoreBreakdown
 from app.schemas.resume import ResumeStructuredData
+from app.services.jd_keywords import EDUCATION_LEVELS
+from app.services.match_rubric import MATCH_RUBRIC
 
 
-EDUCATION_RANKS = {
-    "专科": 1,
-    "大专": 1,
-    "本科": 2,
-    "学士": 2,
-    "硕士": 3,
-    "研究生": 3,
-    "博士": 4,
-}
+EDUCATION_RANKS = dict(EDUCATION_LEVELS)
 
 
 def score_resume_match(
@@ -57,13 +51,13 @@ def score_resume_match(
 
 def _score_skills(required_skills: list[str], matched_keywords: list[str]) -> int:
     if not required_skills:
-        return 35
-    return round(45 * len(matched_keywords) / len(required_skills))
+        return round(MATCH_RUBRIC.skill_score * 0.78)
+    return round(MATCH_RUBRIC.skill_score * len(matched_keywords) / len(required_skills))
 
 
 def _score_education(resume: ResumeStructuredData, jd: JobDescriptionAnalysis) -> int:
     if not jd.required_education:
-        return 12
+        return round(MATCH_RUBRIC.education_score * 0.8)
 
     required_rank = EDUCATION_RANKS.get(jd.required_education, 0)
     resume_rank = 0
@@ -76,10 +70,10 @@ def _score_education(resume: ResumeStructuredData, jd: JobDescriptionAnalysis) -
                 resume_rank = max(resume_rank, rank)
 
     if resume_rank >= required_rank and required_rank > 0:
-        return 15
+        return MATCH_RUBRIC.education_score
     if resume_rank > 0:
-        return 8
-    return 4
+        return round(MATCH_RUBRIC.education_score * 0.53)
+    return round(MATCH_RUBRIC.education_score * 0.27)
 
 
 def _score_experience(
@@ -91,12 +85,16 @@ def _score_experience(
     has_work = bool(resume.work_experience)
 
     if jd.required_experience_years is None:
-        return 20 if has_work or resume_years else 14
+        return (
+            round(MATCH_RUBRIC.experience_score * 0.8)
+            if has_work or resume_years
+            else round(MATCH_RUBRIC.experience_score * 0.56)
+        )
     if resume_years >= jd.required_experience_years:
-        return 25
+        return MATCH_RUBRIC.experience_score
     if has_work:
-        return 14
-    return 6
+        return round(MATCH_RUBRIC.experience_score * 0.56)
+    return round(MATCH_RUBRIC.experience_score * 0.24)
 
 
 def _score_projects(
@@ -105,7 +103,7 @@ def _score_projects(
     resume_corpus: str,
 ) -> int:
     if not resume.projects:
-        return 4
+        return round(MATCH_RUBRIC.project_score * 0.27)
 
     project_text = " ".join(
         " ".join(
@@ -126,8 +124,8 @@ def _score_projects(
         keyword for keyword in jd.keywords[:20] if keyword.lower() in project_text or keyword.lower() in resume_corpus
     ]
     if matched:
-        return 15
-    return 9
+        return MATCH_RUBRIC.project_score
+    return round(MATCH_RUBRIC.project_score * 0.6)
 
 
 def _match_keywords(required_skills: list[str], resume_corpus: str) -> tuple[list[str], list[str]]:
@@ -191,10 +189,10 @@ def _build_explanations(
     project_score: int,
 ) -> list[str]:
     explanations = [
-        f"技能匹配得分 {skill_score}/45，命中 {len(matched_keywords)} 个核心技能。",
-        f"学历相关性得分 {education_score}/15。",
-        f"工作经验相关性得分 {experience_score}/25。",
-        f"项目经历相关性得分 {project_score}/15。",
+        f"技能匹配得分 {skill_score}/{MATCH_RUBRIC.skill_score}，命中 {len(matched_keywords)} 个核心技能。",
+        f"学历相关性得分 {education_score}/{MATCH_RUBRIC.education_score}。",
+        f"工作经验相关性得分 {experience_score}/{MATCH_RUBRIC.experience_score}。",
+        f"项目经历相关性得分 {project_score}/{MATCH_RUBRIC.project_score}。",
     ]
     if jd.required_experience_years is not None:
         explanations.append(f"JD 要求约 {jd.required_experience_years} 年经验。")

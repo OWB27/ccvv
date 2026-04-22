@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from app.schemas.match import JobDescriptionAnalyzeRequest, JobDescriptionAnalyzeResponse
-from app.services.jd_extractor import analyze_jd_text
+from app.services.rule_jd_extractor import analyze_jd_text
 
 router = APIRouter()
 
@@ -17,4 +17,3 @@ def analyze_job_description(
         )
 
     return JobDescriptionAnalyzeResponse(jd=analyze_jd_text(payload.jd_text))
-

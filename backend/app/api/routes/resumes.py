@@ -2,12 +2,10 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
 from app.schemas.match import ResumeMatchResponse
 from app.schemas.resume import ResumeExtractResponse, ResumeParseResponse
-from app.services.ai_matcher import AiMatchError, score_resume_match_with_ai
-from app.services.pdf_parser import PdfParseError, PdfTextExtraction, extract_text_from_pdf
-from app.services.jd_extractor import analyze_jd_text
-from app.services.matching import score_resume_match
-from app.services.resume_extractor import extract_resume_information
-from app.services.text_cleaner import build_text_preview, clean_resume_text
+from app.services.pdf_text_extractor import PdfParseError, PdfTextExtraction, extract_text_from_pdf
+from app.services.resume_extraction_service import extract_resume_information
+from app.services.resume_match_service import match_resume_file_text
+from app.services.resume_text_cleaner import build_text_preview, clean_resume_text
 
 router = APIRouter()
 
@@ -60,36 +58,11 @@ async def match_resume_with_jd(
         )
 
     extraction = await _read_and_extract_text(file)
-    cleaned_text = clean_resume_text(extraction.raw_text)
-    resume_result = extract_resume_information(cleaned_text)
-    jd_analysis = analyze_jd_text(jd_text)
-    warnings = list(resume_result.warnings)
-
-    try:
-        ai_result = score_resume_match_with_ai(
-            resume=resume_result.data,
-            jd=jd_analysis,
-            jd_text=jd_text,
-        )
-        match_result = ai_result.match
-        warnings.extend(ai_result.warnings)
-    except AiMatchError as exc:
-        warnings.append(str(exc))
-        match_result = score_resume_match(
-            resume=resume_result.data,
-            jd=jd_analysis,
-            resume_text=cleaned_text,
-        )
-
-    return ResumeMatchResponse(
+    return match_resume_file_text(
         filename=file.filename or "resume.pdf",
         page_count=extraction.page_count,
-        resume=resume_result.data,
-        jd=jd_analysis,
-        match=match_result,
-        cleaned_text_preview=build_text_preview(cleaned_text),
-        extraction_method=resume_result.method,
-        warnings=warnings,
+        raw_resume_text=extraction.raw_text,
+        jd_text=jd_text,
     )
 
 
