@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 
 import { fetchHealthStatus } from './api/health'
-import { extractResumeInfo } from './api/resume'
+import { matchResumeWithJd } from './api/resume'
 
 function App() {
   const [resumeFile, setResumeFile] = useState(null)
@@ -58,16 +58,20 @@ function App() {
       setExtractState({ loading: false, error: '请先选择一个 PDF 简历文件。', data: null })
       return
     }
+    if (!jobDescription.trim()) {
+      setExtractState({ loading: false, error: '请先填写岗位 JD。', data: null })
+      return
+    }
 
     setExtractState({ loading: true, error: '', data: null })
 
     try {
-      const data = await extractResumeInfo(resumeFile)
+      const data = await matchResumeWithJd(resumeFile, jobDescription)
       setExtractState({ loading: false, error: '', data })
     } catch (error) {
       setExtractState({
         loading: false,
-        error: error.message || '简历信息提取失败',
+        error: error.message || '简历匹配失败',
         data: null,
       })
     }
@@ -79,7 +83,9 @@ function App() {
       ? '后端联调失败'
       : '后端联调正常'
 
-  const extracted = extractState.data?.data
+  const extracted = extractState.data?.resume
+  const match = extractState.data?.match
+  const jd = extractState.data?.jd
 
   return (
     <main className="app-shell">
@@ -87,7 +93,7 @@ function App() {
         <div>
           <p className="eyebrow">CCVV - AI Resume Analyzer</p>
           <h1>智能简历分析系统</h1>
-          <p className="subtitle">上传 PDF 简历，提取姓名、电话、邮箱、地址等结构化信息。</p>
+          <p className="subtitle">上传 PDF 简历并填写 JD，提取关键信息后计算岗位匹配评分。</p>
         </div>
         <div className={`health-badge ${healthState.error ? 'error' : 'ok'}`}>
           <span>{healthText}</span>
@@ -113,7 +119,7 @@ function App() {
           <textarea
             value={jobDescription}
             onChange={(event) => setJobDescription(event.target.value)}
-            placeholder="粘贴岗位描述。当前阶段暂不做 JD 匹配。"
+            placeholder="粘贴岗位描述，用于提取关键词并计算匹配评分。"
             rows="9"
           />
         </section>
@@ -132,6 +138,58 @@ function App() {
           )}
           {extractState.data && extracted && (
             <div className="result-content">
+              {match && (
+                <section className="match-summary">
+                  <div>
+                    <span>匹配分数</span>
+                    <strong>{match.score}</strong>
+                  </div>
+                  <p>{match.summary}</p>
+                  <dl className="score-breakdown">
+                    <div>
+                      <dt>技能</dt>
+                      <dd>{match.breakdown.skill_score}/45</dd>
+                    </div>
+                    <div>
+                      <dt>学历</dt>
+                      <dd>{match.breakdown.education_score}/15</dd>
+                    </div>
+                    <div>
+                      <dt>经验</dt>
+                      <dd>{match.breakdown.experience_score}/25</dd>
+                    </div>
+                    <div>
+                      <dt>项目</dt>
+                      <dd>{match.breakdown.project_score}/15</dd>
+                    </div>
+                  </dl>
+                </section>
+              )}
+
+              {jd && (
+                <section className="keyword-section">
+                  <h3>JD 关键词</h3>
+                  <div className="keyword-list">
+                    {jd.keywords.length
+                      ? jd.keywords.slice(0, 20).map((keyword) => (
+                          <span key={keyword}>{keyword}</span>
+                        ))
+                      : <span>未识别到关键词</span>}
+                  </div>
+                </section>
+              )}
+
+              {match?.explanations?.length > 0 && (
+                <section className="nested-result">
+                  <h3>匹配说明</h3>
+                  <ul className="explanation-list">
+                    {match.explanations.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
               <dl className="result-meta">
                 <div>
                   <dt>文件名</dt>

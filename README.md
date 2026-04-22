@@ -1,6 +1,6 @@
 # CCVV - AI Resume Analyzer
 
-AI 赋能的智能简历分析系统。当前仓库处于 Stage 4：简历关键信息提取。
+AI 赋能的智能简历分析系统。当前仓库处于 Stage 5：JD 提取与匹配评分。
 
 ## 当前阶段
 
@@ -38,6 +38,13 @@ Stage 4 已完成简历关键信息提取：
 - 未配置 AI key 或模型响应异常时提供规则 fallback
 - 前端展示结构化结果
 
+Stage 5 已完成 JD 提取与匹配评分：
+
+- 接收 JD 文本并提取关键词和核心要求
+- 基于技能、学历、工作经验、项目经历计算规则匹配分
+- 返回 JD 关键词、匹配分数、分项得分和匹配说明
+- 前端接入 PDF + JD 完整主链路
+
 ## 项目结构
 
 ```text
@@ -47,13 +54,17 @@ Stage 4 已完成简历关键信息提取：
 │   │   ├── api/
 │   │   │   ├── routes/
 │   │   │   │   ├── health.py
+│   │   │   │   ├── jobs.py
 │   │   │   │   └── resumes.py
 │   │   │   └── router.py
 │   │   ├── core/
 │   │   │   └── config.py
 │   │   ├── schemas/
+│   │   │   ├── match.py
 │   │   │   └── resume.py
 │   │   ├── services/
+│   │   │   ├── jd_extractor.py
+│   │   │   ├── matching.py
 │   │   │   ├── pdf_parser.py
 │   │   │   ├── resume_extractor.py
 │   │   │   └── text_cleaner.py
@@ -118,6 +129,35 @@ file: PDF 文件
 - `extraction_method`
 - `warnings`
 
+JD 分析：
+
+```text
+POST /api/jobs/analyze
+Content-Type: application/json
+
+{
+  "jd_text": "岗位描述文本"
+}
+```
+
+简历与 JD 匹配：
+
+```text
+POST /api/resumes/match
+Content-Type: multipart/form-data
+file: PDF 文件
+jd_text: 岗位描述文本
+```
+
+响应包含：
+
+- `resume`
+- `jd`
+- `match`
+- `cleaned_text_preview`
+- `extraction_method`
+- `warnings`
+
 AI 配置：
 
 ```text
@@ -172,4 +212,4 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 后续阶段建议
 
-Stage 5 适合实现 JD 匹配评分，将结构化简历结果和岗位描述一起输入模型，返回匹配分数、匹配理由和改进建议。
+Stage 6 适合做工程化收尾：补基础测试、README 演示说明、环境变量示例和部署准备。

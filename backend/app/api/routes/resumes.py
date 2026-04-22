@@ -1,7 +1,10 @@
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
+from app.schemas.match import ResumeMatchResponse
 from app.schemas.resume import ResumeExtractResponse, ResumeParseResponse
 from app.services.pdf_parser import PdfParseError, PdfTextExtraction, extract_text_from_pdf
+from app.services.jd_extractor import analyze_jd_text
+from app.services.matching import score_resume_match
 from app.services.resume_extractor import extract_resume_information
 from app.services.text_cleaner import build_text_preview, clean_resume_text
 
@@ -41,6 +44,39 @@ async def extract_resume(file: UploadFile = File(...)) -> ResumeExtractResponse:
         cleaned_text_preview=build_text_preview(cleaned_text),
         extraction_method=result.method,
         warnings=result.warnings,
+    )
+
+
+@router.post("/resumes/match", response_model=ResumeMatchResponse)
+async def match_resume_with_jd(
+    file: UploadFile = File(...),
+    jd_text: str = Form(...),
+) -> ResumeMatchResponse:
+    if not jd_text.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="JD text is required.",
+        )
+
+    extraction = await _read_and_extract_text(file)
+    cleaned_text = clean_resume_text(extraction.raw_text)
+    resume_result = extract_resume_information(cleaned_text)
+    jd_analysis = analyze_jd_text(jd_text)
+    match_result = score_resume_match(
+        resume=resume_result.data,
+        jd=jd_analysis,
+        resume_text=cleaned_text,
+    )
+
+    return ResumeMatchResponse(
+        filename=file.filename or "resume.pdf",
+        page_count=extraction.page_count,
+        resume=resume_result.data,
+        jd=jd_analysis,
+        match=match_result,
+        cleaned_text_preview=build_text_preview(cleaned_text),
+        extraction_method=resume_result.method,
+        warnings=resume_result.warnings,
     )
 
 
