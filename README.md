@@ -41,7 +41,9 @@ Stage 4 已完成简历关键信息提取：
 Stage 5 已完成 JD 提取与匹配评分：
 
 - 接收 JD 文本并提取关键词和核心要求
-- 基于技能、学历、工作经验、项目经历计算规则匹配分
+- 优先使用 LLM 计算简历与 JD 匹配分
+- 未配置 AI key 或 LLM 评分失败时 fallback 到规则匹配分
+- 规则评分基于技能、学历、工作经验、项目经历
 - 返回 JD 关键词、匹配分数、分项得分和匹配说明
 - 前端接入 PDF + JD 完整主链路
 
@@ -157,6 +159,11 @@ jd_text: 岗位描述文本
 - `cleaned_text_preview`
 - `extraction_method`
 - `warnings`
+
+`match.scoring_method` 表示当前评分来源：
+
+- `ai`：LLM 评分
+- `rule`：规则 fallback 评分
 
 AI 配置：
 

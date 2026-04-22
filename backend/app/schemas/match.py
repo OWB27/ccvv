@@ -25,6 +25,7 @@ class ScoreBreakdown(BaseModel):
 class MatchResult(BaseModel):
     score: int
     summary: str
+    scoring_method: str = "rule"
     explanations: list[str] = Field(default_factory=list)
     matched_keywords: list[str] = Field(default_factory=list)
     missing_keywords: list[str] = Field(default_factory=list)
@@ -44,4 +45,3 @@ class ResumeMatchResponse(BaseModel):
     cleaned_text_preview: str
     extraction_method: str
     warnings: list[str] = Field(default_factory=list)
-

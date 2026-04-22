@@ -147,6 +147,10 @@ function App() {
                   <p>{match.summary}</p>
                   <dl className="score-breakdown">
                     <div>
+                      <dt>方式</dt>
+                      <dd>{match.scoring_method === 'ai' ? 'LLM' : '规则'}</dd>
+                    </div>
+                    <div>
                       <dt>技能</dt>
                       <dd>{match.breakdown.skill_score}/45</dd>
                     </div>

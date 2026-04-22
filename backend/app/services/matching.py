@@ -42,6 +42,7 @@ def score_resume_match(
     return MatchResult(
         score=min(100, max(0, total)),
         summary=_build_summary(total),
+        scoring_method="rule",
         explanations=explanations,
         matched_keywords=matched_keywords,
         missing_keywords=missing_keywords,
@@ -210,4 +211,3 @@ def _build_summary(score: int) -> str:
     if score >= 50:
         return "匹配度中等，存在若干关键差距。"
     return "匹配度偏低，需要补充更多与 JD 相关的经历和技能。"
-

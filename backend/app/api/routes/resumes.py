@@ -2,6 +2,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
 from app.schemas.match import ResumeMatchResponse
 from app.schemas.resume import ResumeExtractResponse, ResumeParseResponse
+from app.services.ai_matcher import AiMatchError, score_resume_match_with_ai
 from app.services.pdf_parser import PdfParseError, PdfTextExtraction, extract_text_from_pdf
 from app.services.jd_extractor import analyze_jd_text
 from app.services.matching import score_resume_match
@@ -62,11 +63,23 @@ async def match_resume_with_jd(
     cleaned_text = clean_resume_text(extraction.raw_text)
     resume_result = extract_resume_information(cleaned_text)
     jd_analysis = analyze_jd_text(jd_text)
-    match_result = score_resume_match(
-        resume=resume_result.data,
-        jd=jd_analysis,
-        resume_text=cleaned_text,
-    )
+    warnings = list(resume_result.warnings)
+
+    try:
+        ai_result = score_resume_match_with_ai(
+            resume=resume_result.data,
+            jd=jd_analysis,
+            jd_text=jd_text,
+        )
+        match_result = ai_result.match
+        warnings.extend(ai_result.warnings)
+    except AiMatchError as exc:
+        warnings.append(str(exc))
+        match_result = score_resume_match(
+            resume=resume_result.data,
+            jd=jd_analysis,
+            resume_text=cleaned_text,
+        )
 
     return ResumeMatchResponse(
         filename=file.filename or "resume.pdf",
@@ -76,7 +89,7 @@ async def match_resume_with_jd(
         match=match_result,
         cleaned_text_preview=build_text_preview(cleaned_text),
         extraction_method=resume_result.method,
-        warnings=resume_result.warnings,
+        warnings=warnings,
     )
 
 
