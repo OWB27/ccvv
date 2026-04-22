@@ -1,6 +1,6 @@
 # CCVV - AI Resume Analyzer
 
-AI 赋能的智能简历分析系统。当前仓库处于 Stage 3：PDF 上传与文本提取。
+AI 赋能的智能简历分析系统。当前仓库处于 Stage 4：简历关键信息提取。
 
 ## 当前阶段
 
@@ -29,6 +29,15 @@ Stage 3 已完成 PDF 上传与文本提取：
 - 返回原始文本、清洗后文本预览和基础元数据
 - 前端最小接入上传解析接口
 
+Stage 4 已完成简历关键信息提取：
+
+- 设计结构化简历输出 schema
+- 新增 AI 提取服务
+- 支持姓名、电话、邮箱、地址等核心字段
+- 补充求职意向、期望薪资、工作年限、学历背景、项目经历
+- 未配置 AI key 或模型响应异常时提供规则 fallback
+- 前端展示结构化结果
+
 ## 项目结构
 
 ```text
@@ -46,6 +55,7 @@ Stage 3 已完成 PDF 上传与文本提取：
 │   │   │   └── resume.py
 │   │   ├── services/
 │   │   │   ├── pdf_parser.py
+│   │   │   ├── resume_extractor.py
 │   │   │   └── text_cleaner.py
 │   │   └── main.py
 │   ├── tests/
@@ -91,6 +101,33 @@ file: PDF 文件
 - `raw_text_length`
 - `cleaned_text_length`
 
+简历信息提取：
+
+```text
+POST /api/resumes/extract
+Content-Type: multipart/form-data
+file: PDF 文件
+```
+
+响应包含：
+
+- `filename`
+- `page_count`
+- `data`
+- `cleaned_text_preview`
+- `extraction_method`
+- `warnings`
+
+AI 配置：
+
+```text
+AI_API_KEY=your_api_key
+AI_BASE_URL=https://api.openai.com/v1
+AI_MODEL=gpt-4o-mini
+```
+
+也兼容使用 `OPENAI_API_KEY` 作为 API key 环境变量。
+
 ## 本地启动
 
 ### 后端
@@ -135,4 +172,4 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 后续阶段建议
 
-Stage 4 适合接入原生 LLM API，对清洗后的简历文本做结构化信息提取，但仍不做 JD 匹配评分。
+Stage 5 适合实现 JD 匹配评分，将结构化简历结果和岗位描述一起输入模型，返回匹配分数、匹配理由和改进建议。

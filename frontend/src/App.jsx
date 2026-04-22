@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 
 import { fetchHealthStatus } from './api/health'
-import { parseResumePdf } from './api/resume'
+import { extractResumeInfo } from './api/resume'
 
 function App() {
   const [resumeFile, setResumeFile] = useState(null)
@@ -12,7 +12,7 @@ function App() {
     error: '',
     data: null,
   })
-  const [parseState, setParseState] = useState({
+  const [extractState, setExtractState] = useState({
     loading: false,
     error: '',
     data: null,
@@ -48,26 +48,26 @@ function App() {
   function handleFileChange(event) {
     const file = event.target.files?.[0] || null
     setResumeFile(file)
-    setParseState({ loading: false, error: '', data: null })
+    setExtractState({ loading: false, error: '', data: null })
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
 
     if (!resumeFile) {
-      setParseState({ loading: false, error: '请先选择一个 PDF 简历文件。', data: null })
+      setExtractState({ loading: false, error: '请先选择一个 PDF 简历文件。', data: null })
       return
     }
 
-    setParseState({ loading: true, error: '', data: null })
+    setExtractState({ loading: true, error: '', data: null })
 
     try {
-      const data = await parseResumePdf(resumeFile)
-      setParseState({ loading: false, error: '', data })
+      const data = await extractResumeInfo(resumeFile)
+      setExtractState({ loading: false, error: '', data })
     } catch (error) {
-      setParseState({
+      setExtractState({
         loading: false,
-        error: error.message || 'PDF 解析失败',
+        error: error.message || '简历信息提取失败',
         data: null,
       })
     }
@@ -79,13 +79,15 @@ function App() {
       ? '后端联调失败'
       : '后端联调正常'
 
+  const extracted = extractState.data?.data
+
   return (
     <main className="app-shell">
       <header className="page-header">
         <div>
           <p className="eyebrow">CCVV - AI Resume Analyzer</p>
           <h1>智能简历分析系统</h1>
-          <p className="subtitle">上传 PDF 简历并填写岗位 JD，后续将接入 AI 提取和匹配评分。</p>
+          <p className="subtitle">上传 PDF 简历，提取姓名、电话、邮箱、地址等结构化信息。</p>
         </div>
         <div className={`health-badge ${healthState.error ? 'error' : 'ok'}`}>
           <span>{healthText}</span>
@@ -102,7 +104,7 @@ function App() {
             <input type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
           </label>
           <p className="helper-text">
-            {resumeFile ? `已选择：${resumeFile.name}` : '请选择一个 PDF 文件，当前阶段会提取文本。'}
+            {resumeFile ? `已选择：${resumeFile.name}` : '请选择一个 PDF 文件。'}
           </p>
         </section>
 
@@ -117,44 +119,87 @@ function App() {
         </section>
 
         <section className="actions">
-          <button type="submit" disabled={parseState.loading}>
-            {parseState.loading ? '解析中...' : '提交分析'}
+          <button type="submit" disabled={extractState.loading}>
+            {extractState.loading ? '提取中...' : '提交分析'}
           </button>
         </section>
 
         <section className="panel result-panel">
-          <h2>解析结果</h2>
-          {parseState.error && <p className="error-text">{parseState.error}</p>}
-          {!parseState.error && !parseState.data && (
-            <pre>等待上传 PDF 后展示文本预览。</pre>
+          <h2>结构化结果</h2>
+          {extractState.error && <p className="error-text">{extractState.error}</p>}
+          {!extractState.error && !extractState.data && (
+            <pre>等待上传 PDF 后展示结构化提取结果。</pre>
           )}
-          {parseState.data && (
+          {extractState.data && extracted && (
             <div className="result-content">
               <dl className="result-meta">
                 <div>
                   <dt>文件名</dt>
-                  <dd>{parseState.data.filename}</dd>
+                  <dd>{extractState.data.filename}</dd>
                 </div>
                 <div>
                   <dt>页数</dt>
-                  <dd>{parseState.data.page_count}</dd>
+                  <dd>{extractState.data.page_count}</dd>
                 </div>
                 <div>
-                  <dt>原始文本长度</dt>
-                  <dd>{parseState.data.raw_text_length}</dd>
+                  <dt>提取方式</dt>
+                  <dd>{extractState.data.extraction_method}</dd>
                 </div>
                 <div>
-                  <dt>清洗后文本长度</dt>
-                  <dd>{parseState.data.cleaned_text_length}</dd>
+                  <dt>警告</dt>
+                  <dd>{extractState.data.warnings?.length || 0}</dd>
                 </div>
               </dl>
+
+              {extractState.data.warnings?.length > 0 && (
+                <div className="warning-box">
+                  {extractState.data.warnings.map((warning) => (
+                    <p key={warning}>{warning}</p>
+                  ))}
+                </div>
+              )}
+
+              <div className="structured-grid">
+                <Field label="姓名" value={extracted.name} />
+                <Field label="电话" value={extracted.phone} />
+                <Field label="邮箱" value={extracted.email} />
+                <Field label="地址" value={extracted.address} />
+                <Field label="求职意向" value={extracted.job_intention} />
+                <Field label="期望薪资" value={extracted.expected_salary} />
+                <Field label="工作年限" value={extracted.years_of_experience} />
+              </div>
+
+              <ListSection title="学历背景" items={extracted.education} emptyText="暂无学历信息" />
+              <ListSection title="项目经历" items={extracted.projects} emptyText="暂无项目经历" />
+
               <h3>清洗后文本预览</h3>
-              <pre>{parseState.data.cleaned_text_preview || '未提取到可展示文本。'}</pre>
+              <pre>{extractState.data.cleaned_text_preview || '未提取到可展示文本。'}</pre>
             </div>
           )}
         </section>
       </form>
     </main>
+  )
+}
+
+function Field({ label, value }) {
+  return (
+    <div className="field-item">
+      <span>{label}</span>
+      <strong>{value || '未识别'}</strong>
+    </div>
+  )
+}
+
+function ListSection({ title, items, emptyText }) {
+  return (
+    <section className="nested-result">
+      <h3>{title}</h3>
+      {!items?.length && <p className="helper-text">{emptyText}</p>}
+      {items?.map((item, index) => (
+        <pre key={`${title}-${index}`}>{JSON.stringify(item, null, 2)}</pre>
+      ))}
+    </section>
   )
 }
 
