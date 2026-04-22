@@ -1,16 +1,24 @@
 # AI Resume Analyzer
 
-AI 赋能的智能简历分析系统。当前仓库处于 Stage 1：项目骨架初始化。
+AI 赋能的智能简历分析系统。当前仓库处于 Stage 2：前端最小壳子 + 健康联调。
 
 ## 当前阶段
 
-Stage 1 只完成基础工程结构：
+Stage 1 完成基础工程结构：
 
 - FastAPI 后端项目骨架
 - React + Vite 前端项目骨架
 - `/api/health` 健康检查接口
 - 基础依赖文件
 - 后续测试、CI/CD、部署扩展的目录预留
+
+Stage 2 完成前端最小壳子：
+
+- PDF 文件选择控件
+- JD 文本输入区域
+- 提交分析按钮
+- 分析结果占位区
+- 前端调用后端 `/api/health` 并展示联调状态
 
 ## 项目结构
 
@@ -34,15 +42,15 @@ Stage 1 只完成基础工程结构：
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
+│   │   ├── api/
+│   │   │   └── health.js
 │   │   ├── App.css
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   └── vite-env.d.ts
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
 │   ├── index.html
 │   ├── package.json
-│   ├── tsconfig.json
-│   ├── tsconfig.node.json
-│   └── vite.config.ts
+│   └── vite.config.js
 └── README.md
 ```
 
@@ -88,6 +96,12 @@ npm run dev
 http://localhost:5173
 ```
 
+如需修改前端访问的后端地址，可在前端环境变量中设置：
+
+```text
+VITE_API_BASE_URL=http://localhost:8000
+```
+
 ## 后续阶段建议
 
-Stage 2 适合实现单个 PDF 简历上传接口和基础文件校验，但仍不接入 AI。
+Stage 3 适合实现单个 PDF 简历上传接口和基础文件校验，但仍不接入 AI。

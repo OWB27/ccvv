@@ -1,120 +1,111 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
 import './App.css'
 
+import { fetchHealthStatus } from './api/health'
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [resumeFileName, setResumeFileName] = useState('')
+  const [jobDescription, setJobDescription] = useState('')
+  const [healthState, setHealthState] = useState({
+    loading: true,
+    error: '',
+    data: null,
+  })
+  const [resultMessage, setResultMessage] = useState('等待接入真实分析接口。')
+
+  useEffect(() => {
+    let ignore = false
+
+    async function loadHealthStatus() {
+      try {
+        const data = await fetchHealthStatus()
+        if (!ignore) {
+          setHealthState({ loading: false, error: '', data })
+        }
+      } catch (error) {
+        if (!ignore) {
+          setHealthState({
+            loading: false,
+            error: error.message || '后端健康检查失败',
+            data: null,
+          })
+        }
+      }
+    }
+
+    loadHealthStatus()
+
+    return () => {
+      ignore = true
+    }
+  }, [])
+
+  function handleFileChange(event) {
+    const file = event.target.files?.[0]
+    setResumeFileName(file ? file.name : '')
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    setResultMessage('Stage 2 仅完成页面壳子，真实分析将在后续阶段接入。')
+  }
+
+  const healthText = healthState.loading
+    ? '正在连接后端...'
+    : healthState.error
+      ? '后端联调失败'
+      : '后端联调正常'
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <main className="app-shell">
+      <header className="page-header">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+          <p className="eyebrow">AI Resume Analyzer</p>
+          <h1>智能简历分析系统</h1>
+          <p className="subtitle">上传简历、填写岗位 JD，后续将返回结构化分析结果。</p>
+        </div>
+        <div className={`health-badge ${healthState.error ? 'error' : 'ok'}`}>
+          <span>{healthText}</span>
+          {healthState.data && <small>{healthState.data.service}</small>}
+          {healthState.error && <small>{healthState.error}</small>}
+        </div>
+      </header>
+
+      <form className="workspace" onSubmit={handleSubmit}>
+        <section className="panel">
+          <h2>PDF 简历</h2>
+          <label className="upload-box">
+            <span>选择 PDF 文件</span>
+            <input type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
+          </label>
+          <p className="helper-text">
+            {resumeFileName || '当前阶段只选择文件，不执行上传。'}
           </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        </section>
 
-      <div className="ticks"></div>
+        <section className="panel">
+          <h2>岗位 JD</h2>
+          <textarea
+            value={jobDescription}
+            onChange={(event) => setJobDescription(event.target.value)}
+            placeholder="粘贴岗位描述，后续阶段将用于匹配评分。"
+            rows="9"
+          />
+        </section>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <section className="actions">
+          <button type="submit">提交分析</button>
+        </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <section className="panel result-panel">
+          <h2>分析结果</h2>
+          <pre>{resultMessage}</pre>
+          <p className="helper-text">
+            后续会在这里展示简历信息提取、JD 匹配评分和结构化 JSON。
+          </p>
+        </section>
+      </form>
+    </main>
   )
 }
 
