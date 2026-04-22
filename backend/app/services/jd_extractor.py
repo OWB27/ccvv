@@ -1,54 +1,10 @@
 import re
 
 from app.schemas.match import JobDescriptionAnalysis
-
-
-SKILL_KEYWORDS = (
-    "Python",
-    "Java",
-    "JavaScript",
-    "TypeScript",
-    "Go",
-    "C++",
-    "FastAPI",
-    "Django",
-    "Flask",
-    "Spring",
-    "React",
-    "Vue",
-    "Node.js",
-    "SQL",
-    "MySQL",
-    "PostgreSQL",
-    "Redis",
-    "MongoDB",
-    "Docker",
-    "Kubernetes",
-    "Linux",
-    "Git",
-    "REST",
-    "API",
-    "LLM",
-    "NLP",
-    "PyTorch",
-    "TensorFlow",
-    "机器学习",
-    "深度学习",
-    "数据分析",
-    "微服务",
-    "后端",
-    "前端",
-    "算法",
-)
-
-EDUCATION_LEVELS = (
-    ("博士", 4),
-    ("硕士", 3),
-    ("研究生", 3),
-    ("本科", 2),
-    ("学士", 2),
-    ("大专", 1),
-    ("专科", 1),
+from app.services.jd_keywords import (
+    EDUCATION_LEVELS,
+    JD_SIGNAL_KEYWORDS,
+    SKILL_KEYWORDS,
 )
 
 
@@ -59,10 +15,14 @@ def analyze_jd_text(jd_text: str) -> JobDescriptionAnalysis:
     experience_years = _extract_required_experience(normalized)
     requirements = _extract_core_requirements(normalized)
 
-    keywords = _dedupe(skills + _extract_chinese_keywords(normalized))
+    keywords = _dedupe(
+        skills
+        + _extract_signal_keywords(normalized)
+        + _build_requirement_keywords(education, experience_years)
+    )
 
     return JobDescriptionAnalysis(
-        keywords=keywords[:30],
+        keywords=keywords[:20],
         required_skills=skills,
         required_education=education,
         required_experience_years=experience_years,
@@ -71,12 +31,19 @@ def analyze_jd_text(jd_text: str) -> JobDescriptionAnalysis:
 
 
 def _extract_skills(text: str) -> list[str]:
-    lower_text = text.lower()
     skills = []
     for skill in SKILL_KEYWORDS:
-        if skill.lower() in lower_text:
+        if _contains_keyword(text, skill):
             skills.append(skill)
     return _dedupe(skills)
+
+
+def _contains_keyword(text: str, keyword: str) -> bool:
+    if re.search(r"[\u4e00-\u9fff]", keyword):
+        return keyword in text
+
+    pattern = rf"(?<![A-Za-z0-9]){re.escape(keyword)}(?![A-Za-z0-9])"
+    return re.search(pattern, text, flags=re.IGNORECASE) is not None
 
 
 def _extract_required_education(text: str) -> str | None:
@@ -107,17 +74,20 @@ def _extract_core_requirements(text: str) -> list[str]:
     return requirements[:8]
 
 
-def _extract_chinese_keywords(text: str) -> list[str]:
-    candidates = re.findall(r"[\u4e00-\u9fffA-Za-z0-9.+#-]{2,}", text)
-    stop_words = {"岗位职责", "任职要求", "以上", "负责", "熟悉", "掌握", "具备", "优先"}
+def _extract_signal_keywords(text: str) -> list[str]:
+    return [keyword for keyword in JD_SIGNAL_KEYWORDS if _contains_keyword(text, keyword)]
+
+
+def _build_requirement_keywords(
+    education: str | None,
+    experience_years: int | None,
+) -> list[str]:
     keywords = []
-    for candidate in candidates:
-        if candidate in stop_words or candidate.isdigit():
-            continue
-        if len(candidate) > 24:
-            continue
-        keywords.append(candidate)
-    return _dedupe(keywords)
+    if education:
+        keywords.append(education)
+    if experience_years is not None:
+        keywords.append(f"{experience_years}年经验")
+    return keywords
 
 
 def _dedupe(items: list[str]) -> list[str]:
@@ -129,4 +99,3 @@ def _dedupe(items: list[str]) -> list[str]:
             seen.add(key)
             result.append(item)
     return result
-

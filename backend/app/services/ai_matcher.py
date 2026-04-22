@@ -81,6 +81,7 @@ def _build_prompt(resume: ResumeStructuredData, jd: JobDescriptionAnalysis, jd_t
         "Score how well the structured resume matches the JD. Use a transparent 100-point rubric: "
         "skills 45, education 15, work experience 25, projects 15. Do not invent facts. "
         "If a candidate has no work or project experience, the corresponding score is 0."
+        "As a professional HR specialist and software engineer, scoring must be rigorous and objective to align with today's highly competitive job market."
         "Return JSON exactly matching this schema:\n"
         f"{json.dumps(schema, ensure_ascii=False)}\n\n"
         "Structured resume:\n"
