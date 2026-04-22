@@ -1,0 +1,15 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: ccvv-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

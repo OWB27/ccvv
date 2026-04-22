@@ -22,12 +22,23 @@ def _load_env_file() -> None:
 _load_env_file()
 
 
+def _get_csv_env(name: str, default: list[str]) -> list[str]:
+    value = os.getenv(name)
+    if not value:
+        return default
+
+    items = [item.strip() for item in value.split(",")]
+    return [item for item in items if item]
+
+
 @dataclass(frozen=True)
 class Settings:
     PROJECT_NAME: str = "CCVV - AI Resume Analyzer API"
     API_VERSION: str = "0.1.0"
     API_PREFIX: str = "/api"
-    ALLOWED_ORIGINS: list[str] = field(default_factory=lambda: ["http://localhost:5173"])
+    ALLOWED_ORIGINS: list[str] = field(
+        default_factory=lambda: _get_csv_env("ALLOWED_ORIGINS", ["http://localhost:5173"])
+    )
     AI_API_KEY: str | None = os.getenv("AI_API_KEY") or os.getenv("OPENAI_API_KEY")
     AI_BASE_URL: str = os.getenv("AI_BASE_URL", "https://api.openai.com/v1")
     AI_MODEL: str = os.getenv("AI_MODEL", "gpt-5.4-mini")
