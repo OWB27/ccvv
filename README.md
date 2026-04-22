@@ -1,6 +1,6 @@
 # CCVV - AI Resume Analyzer
 
-AI 赋能的智能简历分析系统。当前仓库处于 Stage 5：JD 提取与匹配评分。
+AI 赋能的智能简历分析系统。当前仓库处于 Stage 6：前端结果展示增强。
 
 ## 当前阶段
 
@@ -47,6 +47,14 @@ Stage 5 已完成 JD 提取与匹配评分：
 - 返回 JD 关键词、匹配分数、分项得分和匹配说明
 - 前端接入 PDF + JD 完整主链路
 
+Stage 6 已完成前端结果展示增强：
+
+- 前端结果区按匹配概览、JD 关键词、匹配说明、简历基本信息、学历背景、工作经历、项目经历组织
+- 增强 loading、error、empty 状态
+- 优化 PDF 上传与 JD 输入交互
+- 抽象前端展示组件，降低 `App.jsx` 复杂度
+- 前端样式全部使用 TailwindCSS utility class
+
 ## 项目结构
 
 ```text
@@ -79,7 +87,20 @@ Stage 5 已完成 JD 提取与匹配评分：
 │   │   ├── api/
 │   │   │   ├── health.js
 │   │   │   └── resume.js
-│   │   ├── App.css
+│   │   ├── components/
+│   │   │   ├── AnalyzeForm.jsx
+│   │   │   ├── ExplanationList.jsx
+│   │   │   ├── FieldGrid.jsx
+│   │   │   ├── HealthBadge.jsx
+│   │   │   ├── JsonListSection.jsx
+│   │   │   ├── KeywordList.jsx
+│   │   │   ├── MatchSummary.jsx
+│   │   │   ├── MetricGrid.jsx
+│   │   │   ├── PageHeader.jsx
+│   │   │   ├── ResultDashboard.jsx
+│   │   │   └── StatusNotice.jsx
+│   │   ├── utils/
+│   │   │   └── display.js
 │   │   ├── App.jsx
 │   │   ├── index.css
 │   │   └── main.jsx
@@ -219,4 +240,4 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 后续阶段建议
 
-Stage 6 适合做工程化收尾：补基础测试、README 演示说明、环境变量示例和部署准备。
+下一阶段适合做工程化收尾：补基础测试、README 演示说明、环境变量示例和部署准备。
