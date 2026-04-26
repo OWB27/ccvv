@@ -14,7 +14,7 @@ function ResultDashboard({ state }) {
         <StatusNotice
           type="loading"
           title="正在分析简历与岗位匹配度"
-          message="系统正在解析 PDF、提取简历信息、分析 JD 并计算匹配分。"
+          message="系统正在解析 PDF、提取简历信息、分析 JD，并计算匹配分。"
         />
       </section>
     )
@@ -47,10 +47,8 @@ function ResultDashboard({ state }) {
   return (
     <section className="ui-panel">
       <div className="mb-5">
-        <div>
-          <h2 className="ui-panel-title">分析结果</h2>
-          <p className="ui-muted-text mt-1">已完成简历结构化提取与 JD 匹配评分。</p>
-        </div>
+        <h2 className="ui-panel-title">分析结果</h2>
+        <p className="ui-muted-text mt-1">已完成简历结构化提取与 JD 匹配评分。</p>
       </div>
 
       <div className="grid gap-5">
@@ -99,7 +97,7 @@ function ResultDashboard({ state }) {
           />
         </section>
 
-        <JsonListSection title="学历背景" items={resume.education} emptyText="暂无学历信息" />
+        <JsonListSection title="教育背景" items={resume.education} emptyText="暂无教育信息" />
         <JsonListSection title="工作经历" items={resume.work_experience} emptyText="暂无工作经历" />
         <JsonListSection title="项目经历" items={resume.projects} emptyText="暂无项目经历" />
 

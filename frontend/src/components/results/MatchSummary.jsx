@@ -8,13 +8,13 @@ function MatchSummary({ match }) {
   return (
     <section className="ui-summary-panel">
       <div className="flex flex-wrap items-baseline gap-3">
-        <span className="text-sm font-medium text-slate-600">匹配分数</span>
-        <strong className="text-5xl font-bold leading-none text-sky-700">{match.score}</strong>
-        <em className="ui-pill bg-white not-italic text-slate-600">
+        <span className="text-sm font-medium ui-dark-muted">匹配分数</span>
+        <strong className="text-5xl font-medium leading-none text-[#faf9f5]">{match.score}</strong>
+        <em className="ui-pill ui-pill-brand bg-transparent not-italic">
           {match.scoring_method === 'ai' ? 'LLM 评分' : '规则评分'}
         </em>
       </div>
-      <p className="text-slate-700">{match.summary}</p>
+      <p className="leading-[1.6] ui-dark-muted">{match.summary}</p>
       <MetricGrid
         items={[
           { label: '技能', value: `${match.breakdown.skill_score}/45` },

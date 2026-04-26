@@ -6,14 +6,8 @@ function HealthBadge({ state }) {
       : '后端联调正常'
 
   return (
-    <div
-      className={`grid min-w-48 gap-1 rounded-lg border px-4 py-3 text-left text-sm ${
-        state.error
-          ? 'border-red-200 bg-red-50 text-red-800'
-          : 'border-sky-200 bg-sky-50 text-slate-800'
-      }`}
-    >
-      <span className="font-semibold">{text}</span>
+    <div className={`ui-health ${state.error ? 'ui-health-error' : ''}`}>
+      <span className="font-medium">{text}</span>
       {state.data && <small className="text-current opacity-75">{state.data.service}</small>}
       {state.error && <small className="text-current opacity-75">{state.error}</small>}
     </div>

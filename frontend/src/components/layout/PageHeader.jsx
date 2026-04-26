@@ -38,12 +38,12 @@ function PageHeader() {
   }, [])
 
   return (
-    <header className="mb-8 grid gap-5 md:flex md:items-start md:justify-between">
+    <header className="ui-header">
       <div>
-        <p className="mb-2 text-sm font-bold tracking-normal text-sky-700">CCVV - AI Resume Analyzer</p>
-        <h1 className="text-4xl font-bold leading-tight text-slate-950">CCVV 简历分析系统</h1>
-        <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
-          上传 PDF 简历并填写 JD，提取关键信息后计算岗位匹配评分。
+        <p className="ui-overline">CCVV - AI Resume Analyzer</p>
+        <h1 className="ui-hero-title">简历与岗位匹配分析</h1>
+        <p className="ui-hero-copy">
+          上传 PDF 简历，粘贴岗位 JD。系统会提取候选人信息、识别岗位关键词，并给出一份安静清晰的匹配报告。
         </p>
       </div>
       <HealthBadge state={healthState} />

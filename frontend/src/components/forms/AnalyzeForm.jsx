@@ -36,18 +36,19 @@ function AnalyzeForm({ loading, onAnalyze, onInputChange }) {
           <span className="ui-step-badge">1</span>
           <div>
             <h2 className="ui-panel-title">PDF 简历</h2>
-            <p className="ui-muted-text mt-1">支持单个 PDF 文件，提交后会自动解析并提取信息。</p>
+            <p className="ui-muted-text mt-1">
+              支持单个 PDF 文件。提交后会自动解析页面文本并提取候选人信息。
+            </p>
           </div>
         </div>
-        <label
-          className={`ui-upload-box ${
-            resumeFile
-              ? 'border-sky-400 bg-sky-50 text-sky-800'
-              : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-sky-400 hover:bg-sky-50'
-          }`}
-        >
-          <span className="font-semibold">{resumeFile ? '重新选择 PDF' : '选择 PDF 文件'}</span>
-          <input className="mt-3 max-w-full text-sm" type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
+        <label className="ui-upload-box" data-active={Boolean(resumeFile)}>
+          <span className="font-medium">{resumeFile ? '重新选择 PDF' : '选择 PDF 文件'}</span>
+          <input
+            className="ui-file-input"
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={handleFileChange}
+          />
         </label>
         <p className="ui-helper-text">
           {resumeFile ? `已选择：${resumeFile.name}` : '请选择一个 PDF 文件。'}
@@ -59,25 +60,23 @@ function AnalyzeForm({ loading, onAnalyze, onInputChange }) {
           <span className="ui-step-badge">2</span>
           <div>
             <h2 className="ui-panel-title">岗位 JD</h2>
-            <p className="ui-muted-text mt-1">粘贴岗位描述，用于提取关键词并计算匹配评分。</p>
+            <p className="ui-muted-text mt-1">
+              粘贴岗位描述，用于提取关键词、职责要求和匹配评分依据。
+            </p>
           </div>
         </div>
         <textarea
           className="ui-textarea"
           value={jobDescription}
           onChange={handleJobDescriptionChange}
-          placeholder="例如：负责 Python 后端服务开发，熟悉 FastAPI、SQL、Docker，有 3 年以上经验..."
+          placeholder="例如：负责 Python 后端服务开发，熟悉 FastAPI、SQL、Docker，有 3 年以上项目经验..."
           rows="10"
         />
         <p className="ui-helper-text">已输入 {jobDescription.trim().length} 个字符。</p>
       </section>
 
       <section className="ui-panel flex justify-end lg:col-span-2">
-        <button
-          className="ui-primary-button"
-          type="submit"
-          disabled={!canSubmit}
-        >
+        <button className="ui-primary-button" type="submit" disabled={!canSubmit}>
           {loading ? '分析中...' : '提交分析'}
         </button>
       </section>

@@ -4,7 +4,7 @@ function MetricGrid({ items }) {
       {items.map((item) => (
         <div className="ui-metric-card" key={item.label}>
           <dt className="ui-muted-text">{item.label}</dt>
-          <dd className="mt-1 break-words font-bold text-slate-900">{item.value}</dd>
+          <dd className="ui-strong-text mt-1">{item.value}</dd>
         </div>
       ))}
     </dl>
