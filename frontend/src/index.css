@@ -50,6 +50,33 @@ textarea {
     color: #c96442;
   }
 
+  .ui-header-aside {
+    @apply grid w-full gap-3 md:w-auto md:min-w-56;
+  }
+
+  .ui-brand-lockup {
+    @apply inline-flex w-full items-center gap-3 rounded-2xl px-3 py-2;
+    background: rgba(245, 244, 237, 0.72);
+    box-shadow: #e8e6dc 0px 0px 0px 1px;
+  }
+
+  .ui-brand-mark {
+    @apply h-12 w-12 rounded-2xl;
+    box-shadow:
+      rgba(0, 0, 0, 0.05) 0px 4px 24px,
+      #d1cfc5 0px 0px 0px 1px;
+  }
+
+  .ui-brand-name {
+    @apply text-base font-medium leading-none tracking-[0.12px];
+    color: #141413;
+  }
+
+  .ui-brand-caption {
+    @apply mt-1 text-xs leading-none tracking-[0.12px];
+    color: #87867f;
+  }
+
   .ui-hero-title {
     @apply max-w-3xl font-serif text-[2.25rem] font-medium leading-[1.1] sm:text-[3.25rem] lg:text-[4rem];
     color: #141413;
@@ -219,7 +246,7 @@ textarea {
   }
 
   .ui-health {
-    @apply grid min-w-48 gap-1 rounded-xl px-4 py-3 text-left text-sm;
+    @apply grid w-full gap-1 rounded-xl px-4 py-3 text-left text-sm;
     background: #e8e6dc;
     color: #4d4c48;
     box-shadow: #d1cfc5 0px 0px 0px 1px;

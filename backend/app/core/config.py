@@ -33,7 +33,7 @@ def _get_csv_env(name: str, default: list[str]) -> list[str]:
 
 @dataclass(frozen=True)
 class Settings:
-    PROJECT_NAME: str = "CCVV - AI Resume Analyzer API"
+    PROJECT_NAME: str = "CCVV - API"
     API_VERSION: str = "0.1.0"
     API_PREFIX: str = "/api"
     ALLOWED_ORIGINS: list[str] = field(
